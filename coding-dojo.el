@@ -68,7 +68,7 @@
     (basic-save-buffer)
     ;; Final actions
     (viper-insert nil)
-    (shell-command "hg init && hg add * && hg commit -m first")
+    (shell-command "git init && git add * && git commit -m first")
     (map nil
          '(lambda (file)
             "Set VC mode in every file"
