@@ -1,0 +1,27 @@
+;;
+;; Tests for xp-dojo
+;;
+
+(deftest "getting-the-conf"
+  (let ((lua-conf (xp-dojo:configuration 'lua))
+        (lua-main-text (xp-dojo:get 'main-text 'lua))
+        (lua-test-text (xp-dojo:get 'test-text 'lua))
+        (lua-make-text (xp-dojo:get 'make-text 'lua)))
+    (assert-nonnil lua-conf)
+    (assert-t (listp lua-conf))
+    (assert-t (stringp lua-main-text))
+    (assert-t (stringp lua-test-text))
+    (assert-t (stringp lua-make-text))))
+
+(deftest "main-text"
+  (let ((conf (xp-dojo:configuration 'lua)))
+    (assert-equal "--\n-- toto.lua\n--\n\n"
+                  (xp-dojo:main-text 'lua "toto"))))
+
+(deftest "test-text-lua"
+  (assert-equal "--\n-- Tests.lua\n--\nrequire 'luaunit'\nrequire 'toto'\n\nmodule(..., package.seeall)\n\n"
+                (xp-dojo:test-text 'lua "toto")))
+
+(deftest "test-text-elisp"
+  (assert-equal ";;\n;; Tests.elk\n;;\n\n"
+                (xp-dojo:test-text 'elisp "toto")))
