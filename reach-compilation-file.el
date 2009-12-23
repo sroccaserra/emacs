@@ -12,8 +12,7 @@
               parent (file-name-directory (directory-file-name dir))))
       (if (string= dir parent)
           (error "Search file %s is missing" *compilation-file*)
-        (with-current-buffer compilation-last-buffer
-          (setq default-directory dir))))))
+        (setq default-directory dir)))))
 
 (setq compilation-process-setup-function 'reach-compilation-file)
 
