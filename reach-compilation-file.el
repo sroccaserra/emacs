@@ -1,6 +1,11 @@
 (defvar *compilation-file* "Makefile")
 
 (defun reach-compilation-file ()
+  "If your compile command containts 'make', goes up in the path until it finds a makefile.
+
+I use it like this:
+    (add-hook 'compilation-mode-hook '(lambda ()
+                                        (require 'reach-compilation-file)))"
   (when (string-match "make"
                       (car compilation-arguments))
     ;; Search for the compilation file traversing up the directory tree.
