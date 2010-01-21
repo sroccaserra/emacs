@@ -2,116 +2,112 @@
 ;; coding-dojo.el
 ;;
 
-(defvar *coding-dojo-directory* "~/Dropbox/Developer/Dojo")
+(defvar *cd-template-dir* "~/Dropbox/.emacs.d/coding-dojo")
+(defvar *cd-project-dir* "~/Dropbox/Developer/CodingDojo")
 
-(defun coding-dojo:new-project (name language)
-  (interactive "sProject Name: \nSLanguage: ")
-  (let ((capitalized-name (upcase-initials name)))
-  (let ((path (coding-dojo:path capitalized-name language)))
-    (if (file-exists-p path)
-        (message "Error: directory '%s' already exists." path)
-      (coding-dojo:make-project capitalized-name language)))))
+(defvar *cd-find-command* "find %s -type f")
+(defvar *cd-prune-paths* '("*/.git/*" "*/.hg/*"))
 
-(defun coding-dojo:path (name language)
-  (concat *coding-dojo-directory* "/"
-          name "-" (capitalize (symbol-name language))))
+(defvar *cd-after-new-project-command* "git init && git add . && git commit -m 'first'")
 
-(defun coding-dojo:configuration (language)
-  (cdr (assoc language *coding-dojo:configurations*)))
+(defstruct cd-project
+  name
+  language
+  dir
+  extension
+  main-file)
 
-(defun coding-dojo:get (token language)
-  (let ((configuration (coding-dojo:configuration language)))
-    (cdr (assoc token configuration))))
+(defun cd-template-dir (language)
+  (concat *cd-template-dir* "/" language))
 
-(defun coding-dojo:main-text (language project-name)
-  (let* ((extension (coding-dojo:get 'extension language))
-         (main-file (concat project-name extension)))
-  (format (coding-dojo:get 'main-text language) main-file project-name)))
+(defun cd-project-dir-for (project)
+  (format "%s/%s-%s"
+          *cd-project-dir*
+          (upcase-initials (cd-project-name project))
+          (upcase-initials (cd-project-language project))))
 
-(defun coding-dojo:test-text (language name)
-  (let ((test-file (coding-dojo:get 'test-file language)))
-    (format (coding-dojo:get 'test-text language) test-file name)))
+(defun cd-create-project (language project-name)
+  (let* ((project (make-cd-project :language language
+                                   :name project-name))
+         (project-dir (cd-project-dir-for project)))
+    (setf (cd-project-dir project) project-dir)
+    (setf (cd-project-main-file project) (cd-find-main-file project))
+;    (setf (cd-project-extension project) (cd-find-extension project))
 
-(defun coding-dojo:make-text (language)
-  (let ((test-file (coding-dojo:get 'test-file language))
-        (test-dir (coding-dojo:get 'test-dir language)))
-    (when test-dir
-      (setq test-file (concat test-dir "/" test-file)))
-    (format (coding-dojo:get 'make-text language) test-file)))
+    (make-directory project-dir t)
+    (dired-copy-file-recursive (cd-template-dir language) project-dir
+                               nil nil t 'always)
+    project))
 
-(defun coding-dojo:make-project (name language)
-  (let ((path (coding-dojo:path name language))
-        (src-dir (coding-dojo:get 'src-dir language))
-        (test-dir (coding-dojo:get 'test-dir language))
-        (main-file (concat name (coding-dojo:get 'extension language)))
-        (test-file (coding-dojo:get 'test-file language))
-        (make-file (coding-dojo:get 'make-file language)))
-    (make-directory path t)
-    (when make-file
-      ;; Make file
-      (find-file (concat path "/" make-file))
-      (insert (coding-dojo:make-text language))
-      (basic-save-buffer))
-    ;; Main file
-    (when src-dir
-      (make-directory (concat path "/" src-dir))
-      (setq main-file (concat src-dir "/" main-file)))
-    (find-file (concat path "/" main-file))
-    (insert (coding-dojo:main-text language name))
-    (basic-save-buffer)
-    ;; Test file
-    (when test-dir
-      (make-directory (concat path "/" test-dir))
-      (setq test-file (concat test-dir "/" test-file)))
-    (find-file (concat path "/" test-file))
-    (insert (coding-dojo:test-text language name))
-    (basic-save-buffer)
-    ;; Final actions
-    (viper-insert nil)
-    (shell-command "git init && git add * && git commit -m first")
-    (map nil
-         '(lambda (file)
-            "Set VC mode in every file"
-            (find-file (concat path "/" file))
-            (vc-find-file-hook))
-         (list make-file main-file test-file))
-    (when make-file
-      (compile compile-command))))
+(defun cd-delete-project (project)
+  (dired-delete-file (cd-project-dir project) 'always))
 
-;; Config
+(defun cd-unexpand-home (str)
+  (let ((home (shell-command-to-string "echo -n ~")))
+    (replace-in-string str home "~")))
 
-(setq *coding-dojo:configurations*
-  '((lua . ((extension . ".lua")
-            (main-text . "--\n-- %s\n--\n\n")
-            (test-file . "Tests.lua")
-            (test-text . "--\n-- %s\n--\nrequire 'luaunit'\nrequire '%s'\n\nmodule(..., package.seeall)\n\n")
-            (make-file . "Makefile")
-            (make-text . "test:\n\tlua -e \"require 'Tests';LuaUnit:run();os.exit(math.min(UnitResult.failureCount, 255))\"\n")))
+(defun cd-find-project-files (project)
+  (let* ((project-dir (cd-project-dir project))
+         (find-command (concat (format *cd-find-command* project-dir)
+                               (cd-prune-arguments *cd-prune-paths*)))
+         (output (shell-command-to-string find-command)))
+    (split-string (cd-unexpand-home output) "\n")))
 
-    (elisp . ((extension . ".el")
-              (main-text . ";;\n;; %s\n;;\n\n")
-              (test-file . "Tests.elk")
-              (test-text . ";;\n;; %s\n;;\n\n")))
+(defun cd-find-main-file (project)
+  (find-if  '(lambda (x)
+               (string-match "main" x))
+            (cd-find-project-files project)))
 
-    (python . ((extension .".py")
-               (main-text . "#\n# %s\n#\n\n")
-               (test-file . "Tests.py")
-               (test-text . "#\n# %s\n#\n\nimport unittest\nfrom %s import *\n\nclass Tests(unittest.TestCase):\n    pass\n\nif __name__ == '__main__':\n    unittest.main()")
-               (make-file . "Makefile")
-               (make-text . "test:\n\tpython %s")))
+(defun cd-find-test-file (project)
+  (let ((project-dir (cd-project-dir project)))
+    (find-if '(lambda (file)
+                (string-match (format "%s.*tests?\." project-dir)
+                              file))
+             (cd-find-project-files project))))
 
-    (ruby . ((extension . ".rb")
-             (main-text . "#\n# %s\n#\n\n")
-             (test-file . "Tests.rb")
-             (test-text . "#\n# %s\n#\n\nrequire 'test/unit'\nrequire '%s'\n\nclass Tests < Test::Unit::TestCase\nend\n")
-             (make-file . "Rakefile")
-             (make-text . "task :default do ruby '%s' end")))
+(defun cd-find-extension (project)
+  (let ((main-file (cd-find-main-file project)))
+    (string-match "main\\.\\(.*\\)$" main-file)
+    (match-string 1 main-file)))
 
-    (haskell . ((extension . ".hs")
-                (main-text . "--\n-- %s\n--\nmodule %s where\n\n")
-                (test-file . "Tests.hs")
-                (test-text . "--\n-- %s\n--\n\nmodule Main where\nimport Test.HUnit\nimport %s\n\n\nmain = runTestTT $\n       []")
-                (make-file . "Makefile")
-                (make-text . "test:\n\trunghc %s")))))
+(defun cd-prune-arguments (path-patterns)
+  (reduce '(lambda (x y)
+             (concat x " ! -path " (shell-quote-argument y)))
+          (push "" path-patterns)))
+
+(defun cd-substitute-variables (project)
+  (let* ((project-name (cd-project-name project))
+         (files (cd-find-project-files project)))
+    (map nil '(lambda (file)
+                (save-excursion
+                  (with-current-buffer (find-file-noselect file t)
+                    (goto-char 0)
+                    (while (search-forward-regexp "\\$main\\>" nil t)
+                      (replace-match project-name nil t))
+                    (save-buffer)
+                    (kill-buffer))))
+         files)))
+
+(defun cd-project-file (main-file project-name)
+  (replace-regexp-in-string "main" project-name main-file))
+
+(defun cd-rename-main-file (project)
+  (let ((main-file (cd-find-main-file project)))
+    (rename-file main-file
+                 (cd-project-file main-file (cd-project-name project)))))
+
+(defun cd-new-project (language project-name)
+  (interactive "sLanguage: \nsProject Name: ")
+  (let ((project (cd-create-project language project-name)))
+    (cd-substitute-variables project)
+    (let ((main-file (cd-find-main-file project)))
+      (cd-rename-main-file project)
+      (when *cd-after-new-project-command*
+        (save-excursion
+          (find-file (cd-project-dir project))
+          (shell-command *cd-after-new-project-command*)
+          (kill-buffer)))
+      (find-file (cd-project-file main-file project-name))
+      (find-file (cd-find-test-file project)))))
 
 (provide 'coding-dojo)

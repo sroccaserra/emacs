@@ -1,27 +1,110 @@
 ;;
-;; Tests for xp-dojo
+;; Tests for coding-dojo.el
 ;;
 
-(deftest "getting-the-conf"
-  (let ((lua-conf (xp-dojo:configuration 'lua))
-        (lua-main-text (xp-dojo:get 'main-text 'lua))
-        (lua-test-text (xp-dojo:get 'test-text 'lua))
-        (lua-make-text (xp-dojo:get 'make-text 'lua)))
-    (assert-nonnil lua-conf)
-    (assert-t (listp lua-conf))
-    (assert-t (stringp lua-main-text))
-    (assert-t (stringp lua-test-text))
-    (assert-t (stringp lua-make-text))))
+(deftest "Template dir variable is set and points to a directory"
+  (assert-t (boundp '*cd-template-dir*))
+  (assert-t (file-directory-p *cd-template-dir*)))
 
-(deftest "main-text"
-  (let ((conf (xp-dojo:configuration 'lua)))
-    (assert-equal "--\n-- toto.lua\n--\n\n"
-                  (xp-dojo:main-text 'lua "toto"))))
+(deftest "Lua template dir exists"
+  (assert-t (file-directory-p (cd-template-dir "lua")))
+  (assert-t (file-directory-p (cd-template-dir "Lua"))))
 
-(deftest "test-text-lua"
-  (assert-equal "--\n-- Tests.lua\n--\nrequire 'luaunit'\nrequire 'toto'\n\nmodule(..., package.seeall)\n\n"
-                (xp-dojo:test-text 'lua "toto")))
+(deftest "Project dir variable is set and points to a directory"
+  (assert-t (boundp '*cd-project-dir*))
+  (assert-t (file-directory-p *cd-project-dir*)))
 
-(deftest "test-text-elisp"
-  (assert-equal ";;\n;; Tests.elk\n;;\n\n"
-                (xp-dojo:test-text 'elisp "toto")))
+(deftest "Project path is correct"
+  (let ((project (make-cd-project :name "autoTest" :language "lua")))
+    (assert-equal (concat *cd-project-dir* "/AutoTest-Lua")
+                  (cd-project-dir-for project))))
+
+(deftest "Def Struct"
+  (let ((project (make-cd-project :name "AutoTest")))
+    (assert-equal "AutoTest"
+                  (cd-project-name project))
+    (setf (cd-project-name project) "AutoTeste")
+    (assert-equal "AutoTeste"
+                  (cd-project-name project))))
+
+(defun test-in-project (language project-name test-func)
+  (let ((project (cd-create-project language project-name)))
+    (apply test-func (list project))
+    (cd-delete-project project)))
+
+(deftest "Project creation succeeds"
+  (test-in-project
+   "lua" "autoTest"
+   '(lambda (project)
+      (assert-t (file-directory-p (cd-project-dir project))))))
+
+(deftest "Project removal succeeds"
+  (let* ((language "lua")
+         (project-name "autoTest")
+         (project (cd-create-project language project-name)))
+    (cd-delete-project project)
+    (assert-nil (file-directory-p (cd-project-dir project)))))
+
+(deftest "Split a string"
+  (assert-eq 2 (length (split-string "toto\ntata titi" "\n"))))
+
+(deftest "Find if"
+  (assert-nonnil (find-if  '(lambda (x) (string-match "main" x))
+                           '("toto" "test/main.lua"))))
+
+(deftest "Find main file"
+  (test-in-project
+   "lua" "autoTest"
+   '(lambda (project)
+    (assert-equal (concat *cd-project-dir* "/AutoTest-Lua/main.lua")
+                  (cd-find-main-file project)))))
+
+(deftest "Find file extension"
+  (test-in-project
+   "lua" "autoTest"
+   '(lambda (project)
+      (assert-equal "lua"
+                    (cd-find-extension project)))))
+
+(deftest "File list contains main"
+  (test-in-project
+   "lua" "autoTest"
+   '(lambda (project)
+      (assert-nonnil (find-if  '(lambda (x) (string-match "main" x))
+                               (cd-find-project-files project))))))
+
+(deftest "Main file contains '$main'"
+  (test-in-project
+   "lua" "autoTest"
+   '(lambda (project)
+      (let ((shell-command (format "grep -o1 \\$main %s"
+                                   (cd-find-main-file project))))
+        (assert-equal "$main\n"
+                      (shell-command-to-string shell-command))))))
+
+(deftest "Variable substitution in main file"
+  (test-in-project
+   "lua" "autoTest"
+   '(lambda (project)
+      (let* ((project-name (cd-project-name project))
+             (main-file (cd-find-main-file project)))
+        (cd-substitute-variables project)
+        (assert-equal ""
+                      (shell-command-to-string (format "grep \\$main %s" main-file)))
+        (assert-equal (concat project-name "\n")
+                      (shell-command-to-string (format "grep -o1 %s %s" project-name main-file)))))))
+
+(deftest "Rename main file"
+  (test-in-project
+   "lua" "autoTest"
+   '(lambda (project)
+      (let ((main-file (cd-find-main-file project)))
+        (cd-rename-main-file project)
+        (assert-nil (file-exists-p main-file))))))
+
+(deftest "Find test file"
+  (test-in-project
+   "lua" "autoTest"
+   '(lambda (project)
+      (assert-t (file-exists-p (cd-find-test-file project))))))
+
