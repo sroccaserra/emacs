@@ -2,6 +2,8 @@
 ;; Tests for coding-dojo.el
 ;;
 
+(require 'coding-dojo)
+
 (deftest "Template dir variable is set and points to a directory"
   (assert-t (boundp '*dojo-template-dir*))
   (assert-t (file-directory-p *dojo-template-dir*)))
