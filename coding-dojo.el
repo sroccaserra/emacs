@@ -89,8 +89,18 @@
     (rename-file main-file
                  (dojo-project-file main-file (dojo-project-name project)))))
 
+(defun dojo-find-languages ()
+  (let ((find-command (format "find %s -type d -maxdepth 1 -mindepth 1"
+                                                    *dojo-template-dir*)))
+    (split-string (replace-in-string (shell-command-to-string find-command)
+                                     ".*/\\|\n^$"
+                                     "")
+                  "\n")))
+
 (defun dojo-new-project (language project-name)
-  (interactive "sLanguage: \nsProject Name: ")
+  (interactive (let ((languages (map 'list 'downcase (dojo-find-languages))))
+                 (list (completing-read "Language: " languages nil t)
+                       (read-from-minibuffer "Project Name: "))))
   (let ((project (dojo-create-project language project-name)))
     (dojo-substitute-variables project)
     (let ((main-file (dojo-find-main-file project)))

@@ -28,6 +28,9 @@
     (assert-equal "AutoTeste"
                   (dojo-project-name project))))
 
+(deftest "Find languages"
+  (assert-nonnil (member "Lua" (dojo-find-languages))))
+
 (defun test-in-project (test-func)
   (let ((project (dojo-create-project "lua" "autoTest")))
     (apply test-func (list project))
