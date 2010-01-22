@@ -1,6 +1,8 @@
 ;;
 ;; Tests for coding-dojo.el
 ;;
+;; Uses elk-test, see http://nschum.de/src/emacs/elk-test/
+;;
 
 (require 'coding-dojo)
 
