@@ -3,47 +3,47 @@
 ;;
 
 (deftest "Template dir variable is set and points to a directory"
-  (assert-t (boundp '*cd-template-dir*))
-  (assert-t (file-directory-p *cd-template-dir*)))
+  (assert-t (boundp '*dojo-template-dir*))
+  (assert-t (file-directory-p *dojo-template-dir*)))
 
 (deftest "Lua template dir exists"
-  (assert-t (file-directory-p (cd-template-dir "lua")))
-  (assert-t (file-directory-p (cd-template-dir "Lua"))))
+  (assert-t (file-directory-p (dojo-template-dir "lua")))
+  (assert-t (file-directory-p (dojo-template-dir "Lua"))))
 
 (deftest "Project dir variable is set and points to a directory"
-  (assert-t (boundp '*cd-project-dir*))
-  (assert-t (file-directory-p *cd-project-dir*)))
+  (assert-t (boundp '*dojo-project-dir*))
+  (assert-t (file-directory-p *dojo-project-dir*)))
 
 (deftest "Project path is correct"
-  (let ((project (make-cd-project :name "autoTest" :language "lua")))
-    (assert-equal (concat *cd-project-dir* "/AutoTest-Lua")
-                  (cd-project-dir-for project))))
+  (let ((project (make-dojo-project :name "autoTest"
+                                    :language "lua")))
+    (assert-equal (concat *dojo-project-dir* "/AutoTest-lua")
+                  (dojo-project-dir-for project))))
 
 (deftest "Def Struct"
-  (let ((project (make-cd-project :name "AutoTest")))
+  (let ((project (make-dojo-project :name "AutoTest")))
     (assert-equal "AutoTest"
-                  (cd-project-name project))
-    (setf (cd-project-name project) "AutoTeste")
+                  (dojo-project-name project))
+    (setf (dojo-project-name project) "AutoTeste")
     (assert-equal "AutoTeste"
-                  (cd-project-name project))))
+                  (dojo-project-name project))))
 
-(defun test-in-project (language project-name test-func)
-  (let ((project (cd-create-project language project-name)))
+(defun test-in-project (test-func)
+  (let ((project (dojo-create-project "lua" "autoTest")))
     (apply test-func (list project))
-    (cd-delete-project project)))
+    (dojo-delete-project project)))
 
 (deftest "Project creation succeeds"
   (test-in-project
-   "lua" "autoTest"
    '(lambda (project)
-      (assert-t (file-directory-p (cd-project-dir project))))))
+      (assert-t (file-directory-p (dojo-project-dir project))))))
 
 (deftest "Project removal succeeds"
   (let* ((language "lua")
          (project-name "autoTest")
-         (project (cd-create-project language project-name)))
-    (cd-delete-project project)
-    (assert-nil (file-directory-p (cd-project-dir project)))))
+         (project (dojo-create-project language project-name)))
+    (dojo-delete-project project)
+    (assert-nil (file-directory-p (dojo-project-dir project)))))
 
 (deftest "Split a string"
   (assert-eq 2 (length (split-string "toto\ntata titi" "\n"))))
@@ -54,41 +54,30 @@
 
 (deftest "Find main file"
   (test-in-project
-   "lua" "autoTest"
    '(lambda (project)
-    (assert-equal (concat *cd-project-dir* "/AutoTest-Lua/main.lua")
-                  (cd-find-main-file project)))))
-
-(deftest "Find file extension"
-  (test-in-project
-   "lua" "autoTest"
-   '(lambda (project)
-      (assert-equal "lua"
-                    (cd-find-extension project)))))
+      (assert-equal (concat *dojo-project-dir* "/AutoTest-Lua/main.lua")
+                    (dojo-find-main-file project)))))
 
 (deftest "File list contains main"
   (test-in-project
-   "lua" "autoTest"
    '(lambda (project)
       (assert-nonnil (find-if  '(lambda (x) (string-match "main" x))
-                               (cd-find-project-files project))))))
+                               (dojo-find-project-files project))))))
 
 (deftest "Main file contains '$main'"
   (test-in-project
-   "lua" "autoTest"
    '(lambda (project)
       (let ((shell-command (format "grep -o1 \\$main %s"
-                                   (cd-find-main-file project))))
+                                   (dojo-find-main-file project))))
         (assert-equal "$main\n"
                       (shell-command-to-string shell-command))))))
 
 (deftest "Variable substitution in main file"
   (test-in-project
-   "lua" "autoTest"
    '(lambda (project)
-      (let* ((project-name (cd-project-name project))
-             (main-file (cd-find-main-file project)))
-        (cd-substitute-variables project)
+      (let* ((project-name (dojo-project-name project))
+             (main-file (dojo-find-main-file project)))
+        (dojo-substitute-variables project)
         (assert-equal ""
                       (shell-command-to-string (format "grep \\$main %s" main-file)))
         (assert-equal (concat project-name "\n")
@@ -96,15 +85,12 @@
 
 (deftest "Rename main file"
   (test-in-project
-   "lua" "autoTest"
    '(lambda (project)
-      (let ((main-file (cd-find-main-file project)))
-        (cd-rename-main-file project)
+      (let ((main-file (dojo-find-main-file project)))
+        (dojo-rename-main-file project)
         (assert-nil (file-exists-p main-file))))))
 
 (deftest "Find test file"
   (test-in-project
-   "lua" "autoTest"
    '(lambda (project)
-      (assert-t (file-exists-p (cd-find-test-file project))))))
-
+      (assert-t (file-exists-p (dojo-find-test-file project))))))
