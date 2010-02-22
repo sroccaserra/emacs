@@ -6,7 +6,8 @@
   (if eldoc-mode
       (eval-buffer-and-run-tests)
     (when (and (string-match  "make" compile-command)
-               (null (nearest-compilation-file default-directory "Makefile")))
+               (null (nearest-compilation-file default-directory
+                                               *default-compilation-file*)))
       (message "No Makefile found, switching to rake")
       (set (make-local-variable 'compile-command) "rake"))
     (compile compile-command)))
