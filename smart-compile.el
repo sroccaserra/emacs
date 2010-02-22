@@ -4,7 +4,9 @@
   (interactive)
   (save-buffer)
   (if eldoc-mode
-      (eval-buffer-and-run-tests)
+      (progn (eval-buffer)
+             (when (fboundp 'elk-test-run-all-buffers)
+               (elk-test-run-all-buffers t)))
     (when (and (string-match  "make" compile-command)
                (null (nearest-compilation-file default-directory
                                                *default-compilation-file*)))
