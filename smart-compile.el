@@ -7,7 +7,7 @@
       (eval-buffer-and-run-tests)
     (when (and (string-match  "make" compile-command)
                (null (nearest-compilation-file default-directory "Makefile")))
-      (message "No Makefile found, switching to rake"))
+      (message "No Makefile found, switching to rake")
       (set (make-local-variable 'compile-command) "rake"))
     (compile compile-command)))
 
@@ -36,4 +36,4 @@ I use it like this:
 
 (setq compilation-process-setup-function 'reach-compilation-file)
 
-(provide 'reach-compilation-file)
+(provide 'smart-compile)
