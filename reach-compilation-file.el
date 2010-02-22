@@ -1,4 +1,24 @@
-(defvar *compilation-file* "Makefile")
+(defvar *default-compilation-file* "Makefile")
+
+(defun smart-compile ()
+  (interactive)
+  (save-buffer)
+  (if eldoc-mode
+      (eval-buffer-and-run-tests)
+    (when (and (string-match  "make" compile-command)
+               (null (nearest-compilation-file default-directory "Makefile")))
+      (message "No Makefile found, switching to rake"))
+      (set (make-local-variable 'compile-command) "rake"))
+    (compile compile-command)))
+
+(defun nearest-compilation-file (dir compilation-file)
+  "Search for the compilation file traversing up the directory tree."
+  (let ((file-path (concat dir compilation-file))
+        (parent (file-name-directory (directory-file-name dir))))
+    (cond
+     ((file-exists-p file-path) file-path)
+     ((string= dir parent) nil)
+     (t (nearest-compilation-file parent compilation-file)))))
 
 (defun reach-compilation-file ()
   "If your compile command containts 'make', goes up in the path until it finds a makefile.
@@ -8,16 +28,11 @@ I use it like this:
                                         (require 'reach-compilation-file)))"
   (when (string-match "make"
                       (car compilation-arguments))
-    ;; Search for the compilation file traversing up the directory tree.
-    (let* ((dir (expand-file-name default-directory))
-           (parent (file-name-directory (directory-file-name dir))))
-      (while (and (not (file-readable-p (concat dir *compilation-file*)))
-                  (not (string= parent dir)))
-        (setq dir parent
-              parent (file-name-directory (directory-file-name dir))))
-      (if (string= dir parent)
-          (error "Search file %s is missing" *compilation-file*)
-        (setq default-directory dir)))))
+    (let ((compilation-file (nearest-compilation-file (expand-file-name default-directory)
+                                                      *default-compilation-file*)))
+      (when (null compilation-file)
+        (error "No file named '%s' found" *default-compilation-file*))
+      (setq default-directory (file-name-directory compilation-file)))))
 
 (setq compilation-process-setup-function 'reach-compilation-file)
 
