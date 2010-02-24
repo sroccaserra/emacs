@@ -1,6 +1,21 @@
 (defvar *default-compilation-file* "Makefile")
 
 (defun smart-compile ()
+  "Saves current buffer, and depending on context:
+
+- in an elisp file, runs elk tests and returns.
+
+- if the compile command contains \"make\", and a makefile is
+  found in the current directory or upward, runs the compile
+  command.
+
+- otherwise, switches to rake for the current buffer and
+  compiles.
+
+I use it like this:
+
+(global-set-key [(f9)] 'smart-compile)
+"
   (interactive)
   (save-buffer)
   (if eldoc-mode
@@ -24,11 +39,12 @@
      (t (nearest-compilation-file parent compilation-file)))))
 
 (defun reach-compilation-file ()
-  "If your compile command containts 'make', goes up in the path until it finds a makefile.
+  "If your compile command containts 'make', goes up in the path
+until it finds a makefile. I use it like this:
 
-I use it like this:
-    (add-hook 'compilation-mode-hook '(lambda ()
-                                        (require 'reach-compilation-file)))"
+(eval-after-load \"compile\"
+  '(setq compilation-process-setup-function 'reach-compilation-file))
+"
   (when (string-match "make"
                       (car compilation-arguments))
     (let ((compilation-file (nearest-compilation-file (expand-file-name default-directory)
@@ -37,6 +53,19 @@ I use it like this:
         (error "No file named '%s' found" *default-compilation-file*))
       (setq default-directory (file-name-directory compilation-file)))))
 
-(setq compilation-process-setup-function 'reach-compilation-file)
+(defun compile-goto-error-and-close-compilation-window ()
+  "Useful to close compilation windows, so you have only one
+window open at any time (I set `pop-up-windows' to nil). I use
+it like this:
+
+(eval-after-load \"compile\"
+                 '(define-key
+                    compilation-mode-map
+                    [remap compile-goto-error]
+                    'compile-goto-error-and-close-compilation-window))
+"
+  (interactive)
+  (compile-goto-error)
+  (delete-windows-on "*compilation*"))
 
 (provide 'smart-compile)
