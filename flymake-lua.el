@@ -16,7 +16,7 @@
 
 (defcustom flymake-luac-program "luac"
   "How to invoke luac. Other possible value: /usr/local/bin/luac."
-  :type 'string
+  :type 'file
   :group 'flymake-lua)
 
 (defun flymake-create-temp-in-system-tempdir (filename prefix)
