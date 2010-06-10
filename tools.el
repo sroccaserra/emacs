@@ -40,13 +40,12 @@
 ;; Strings
 
 (defun string-empty-p (str)
-  (unless (stringp str)
-    (error "not a string."))
-  (string= "" str))
+  (if str
+      (string= "" str)
+    t))
 
-(defun string-not-blank-p (str)
-  (when str
-    (not (string-empty-p str))))
+(defun string-not-empty-p (str)
+  (not (string-empty-p str)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Undestructive alist functions
