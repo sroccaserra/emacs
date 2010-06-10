@@ -178,8 +178,8 @@
     (assert-error "argument" (destructuring-bind [a] [1]))
     (assert-error "argument" (destructuring-bind (a [b]) (1 [2]))))
 
-(defun destructest (a [b c])
+(defun destructest (a (b c))
   (values a b c))
 
-(deftest "defun can destructure"
-  (assert-error "function" (destructest 1 [2 3])))
+(deftest "defun can't destructure"
+  (assert-error "function" (destructest '(1 (2 3)))))
