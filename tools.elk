@@ -147,3 +147,39 @@
 
 (deftest "symbols are non empty"
   (assert-nil (string-empty-p 'hello)))
+
+;;;;;;;;;;;;;;;;;;;;;
+;; Destructuring bind
+
+(deftest "destructuring nested lists"
+  (destructuring-bind (a (b c)) '(1 (2 3))
+    (assert-equal 1 a)
+    (assert-equal 2 b)
+    (assert-equal 3 c)))
+
+(deftest "destructuring alists overlooks keys"
+  (destructuring-bind ((x . a)(y . b)) '((y . 2)(x . 1))
+    (assert-equal 2 a)
+    (assert-equal 'y x)))
+
+(deftest "destructuring can use nested keywords"
+  (destructuring-bind (a (x &key y z)) '(1 (2 :z 4 :y 3))
+    (assert-equal 1 a)
+    (assert-equal 2 x)
+    (assert-equal 3 y)
+    (assert-equal 4 z)))
+
+(deftest "destructuring can't use hashtables"
+  (let ((h (make-hash-table)))
+    (puthash :a 1 h)
+    (assert-error "listp" (destructuring-bind (&key a) h))))
+
+(deftest "destructuring can't use vectors"
+    (assert-error "argument" (destructuring-bind [a] [1]))
+    (assert-error "argument" (destructuring-bind (a [b]) (1 [2]))))
+
+(defun destructest (a [b c])
+  (values a b c))
+
+(deftest "defun can destructure"
+  (assert-error "function" (destructest 1 [2 3])))
