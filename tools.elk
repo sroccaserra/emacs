@@ -1,0 +1,130 @@
+;;
+;;
+;;
+
+(require 'tools)
+
+(deftest "seq returns the sequence itself"
+  (assert-equal '(1)
+                (seq '(1)))
+  (assert-equal [1]
+                (seq [1]))
+  (assert-equal "1"
+                (seq "1")))
+
+(deftest "seq turns non-sequences into a list"
+  (assert-equal '(1)
+                (seq 1))
+  (assert-equal '(toto)
+                (seq 'toto)))
+
+(deftest "currying the plus function"
+  (assert-equal 5
+                (funcall (partial + 2) 3)))
+
+(deftest "using curry in map"
+  (assert-equal  [2 4 6]
+                (map 'vector (partial * 2) [1 2 3])))
+
+(deftest "using curry in filter"
+  (assert-equal [2 3]
+                (remove-if-not (partial < 1) [1 2 3])))
+
+(deftest "applying trush to one form"
+  (assert-equal 5.0
+                (-> 25 sqrt)))
+
+(deftest "applying trush to two forms"
+  (assert-equal 3.0
+                (-> 25 sqrt (- 2))))
+
+(deftest "chaining trush combinators"
+  (assert-equal "-2.0"
+                (-> 25 sqrt (->> (- 3) number-to-string))))
+
+(deftest "threading three forms"
+  (assert-equal '(* 6 (+ 4 5 (- 2 3 x)))
+                (macroexpand '(->> x (- 2 3) (+ 4 5) (* 6)))))
+
+(lexdef lexdef-test (x)
+        (lambda () x))
+
+(defun defun-test (x)
+  (lambda () x))
+
+(deftest "lexdef has lexical scoping"
+  (let ((lexical (lexdef-test 1))
+        (dynamic (defun-test 1))
+        (x 2))
+    (assert-equal 1
+                  (funcall lexical))
+    (assert-equal 2
+                  (funcall dynamic))))
+
+(deftest "comment returns nil"
+  (assert-equal nil
+                (comment 3)))
+
+(deftest "comment does nothing"
+  (let ((x 1))
+    (setq x 2)
+    (comment
+     (setq x 3))
+    (assert-equal 2 x)))
+
+(deftest "variance of a const list returns 0"
+  (->> [[1 1 1]
+        [2 2 2 2 2]
+        [3 3 3 3 3 3 3]]
+       (mapcar (lambda (v)
+                 (assert-equal 0.0 (variance v))))))
+
+(deftest "variance of a simple list"
+  (assert-that (lambda (x) (< (eval x) 0.001))
+               (- (/ 2 3.0)
+                  (variance [1 2 3]))))
+
+(deftest "retrieving a random element"
+  (assert-equal "ABC"
+                (random-elt ["ABC"])))
+
+(deftest "I can substract two vectors"
+  (assert-equal ["ABC"]
+                (seq-difference ["ABC" "DEF"] ["DEF"])))
+
+;;;
+;; Alist functions
+
+(deftest "I can get a value by key in an alist"
+  (let ((h '((a . 1)(b . 2))))
+    (assert-equal 1
+                  (alist-get h 'a))
+    (assert-equal 2
+                  (alist-get h 'b))
+    (assert-nil (alist-get h 'z))
+    (assert-equal 26
+                  (alist-get h 'z 26))))
+
+(deftest "I can remove a value in an alist"
+  (let ((h '((a . 1)(b . 2)(a . 3))))
+    (assert-nil (-> h (alist-remove 'a) (alist-get 'a)))))
+
+(deftest "I can set a value in an alist"
+  (let ((h '((a . 1)(b . 2)(a . 3))))
+    (assert-equal '((a . 5)(b . 2)) (-> h (alist-set 'a 5)))
+    (assert-equal '((a . 1)(b . 2)(a . 3)) h)))
+
+;;;;;;;;;;
+;; Strings
+
+(deftest "an empty string is empty, a non empty string is not empty"
+  (assert-nil (string-empty-p "hello"))
+  (assert-nonnil (string-empty-p (copy-seq "")))
+  (assert-error "string" (string-empty-p 1))
+  (assert-error "string" (string-empty-p nil)))
+
+(deftest "I can tell if a sring is blank"
+  (assert-t (string-not-blank-p "hello"))
+  (assert-nil (string-not-blank-p nil))
+  (assert-nil (string-not-blank-p ""))
+  (assert-error "string" (string-not-blank-p 1)))
