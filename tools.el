@@ -66,16 +66,36 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Clojure's Trush operators
 
-(defmacro -> (result &rest body)
-  (dolist (form body result)
-    (setq form (sequence form)
-          result (append (list (car form) result)
-                         (cdr form)))))
+(defmacro -> (x &optional form &rest more)
+  (cond ((not (null more))
+         `(-> (-> ,x ,form) ,@more))
+        ((not (null form))
+         (if (sequencep form)
+             `(,(first form) ,x ,@(rest form))
+           (list form x)))
+        (t x)))
 
-(defmacro ->> (result &rest body)
-  (dolist (form body result)
-    (setq form (sequence form)
-          result (append form (list result)))))
+(defmacro ->> (x form &rest more)
+  (cond ((not (null more)) `(->> (->> ,x ,form) ,@more))
+        (t (if (sequencep form)
+               `(,(first form) ,@(rest form) ,x)
+             (list form x)))))
+
+(defmacro -?> (x form &rest more)
+  (cond ((not (null more)) `(-?> (-?> ,x ,form) ,@more))
+        (t (if (sequencep form)
+               `(if (null ,x) nil
+                  (,(first form) ,x ,@(rest form)))
+             `(if (null ,x) nil
+                ,(list form x))))))
+
+(defmacro -?>> (x form &rest more)
+  (cond ((not (null more)) `(-?>> (-?>> ,x ,form) ,@more))
+        (t (if (sequencep form)
+               `(if (null ,x) nil
+                  (,(first form) ,@(rest form) ,x))
+             `(if (null ,x) nil
+                ,(list form x))))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Functional tools

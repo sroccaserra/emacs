@@ -62,13 +62,18 @@
 ;;;;;;;;;;;;;;
 ;; Trush tests
 
+(deftest "trush x is x"
+  (assert-equal 1 (-> 1)))
+
 (deftest "applying trush to one form"
   (assert-equal 5.0
                 (-> 25 sqrt)))
 
 (deftest "applying trush to two forms"
-  (assert-equal 3.0
-                (-> 25 sqrt (- 2))))
+  (assert-equal '(- (-> 25 sqrt) 2)
+                (macroexpand '(-> 25 sqrt (- 2))))
+  (assert-equal '(- (sqrt 25) 2)
+                (macroexpand-all '(-> 25 sqrt (- 2)))))
 
 (deftest "chaining trush combinators"
   (assert-equal "-2.0"
@@ -76,7 +81,35 @@
 
 (deftest "threading three forms"
   (assert-equal '(* 6 (+ 4 5 (- 2 3 x)))
-                (macroexpand '(->> x (- 2 3) (+ 4 5) (* 6)))))
+                (macroexpand-all '(->> x (- 2 3) (+ 4 5) (* 6)))))
+
+(deftest "nil safe trush tests"
+  (assert-equal 5.0
+                (-?> 25 sqrt))
+  (assert-equal nil
+                (-?> nil sqrt))
+  (assert-equal 5.0
+                (-?> 25 (sqrt)))
+  (assert-equal nil
+                (-?> nil (sqrt)))
+  (assert-equal 3.0
+                (-?> 25 sqrt (- 2)))
+  (assert-equal nil
+                (-?> 25 null (- 2))))
+
+(deftest "nil safe trush at end tests"
+  (assert-equal 5.0
+                (-?>> 25 sqrt))
+  (assert-equal nil
+                (-?>> nil sqrt))
+  (assert-equal 5.0
+                (-?>> 25 (sqrt)))
+  (assert-equal nil
+                (-?>> nil (sqrt)))
+  (assert-equal -3.0
+                (-?>> 25 sqrt (- 2)))
+  (assert-equal nil
+                (-?>> 25 null (- 2))))
 
 (deftest "comment returns nil"
   (assert-equal nil

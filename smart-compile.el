@@ -1,4 +1,19 @@
+(require 'tools)
+
 (defvar *default-compilation-file* "Makefile")
+
+(comment
+ "I use it like this"
+ (global-set-key [(f9)] 'smart-compile)
+
+ (eval-after-load \"compile\"
+   '(setq compilation-process-setup-function 'reach-compilation-file))
+
+ (eval-after-load \"compile\"
+   '(define-key
+      compilation-mode-map
+      [remap compile-goto-error]
+      'compile-goto-error-and-close-compilation-window)))
 
 (defun smart-compile ()
   "Saves current buffer, and depending on context:
@@ -10,12 +25,7 @@
   command.
 
 - otherwise, switches to rake for the current buffer and
-  compiles.
-
-I use it like this:
-
-(global-set-key [(f9)] 'smart-compile)
-"
+  compiles."
   (interactive)
   (save-buffer)
   (if eldoc-mode
@@ -40,11 +50,7 @@ I use it like this:
 
 (defun reach-compilation-file ()
   "If your compile command containts 'make', goes up in the path
-until it finds a makefile. I use it like this:
-
-(eval-after-load \"compile\"
-  '(setq compilation-process-setup-function 'reach-compilation-file))
-"
+until it finds a makefile."
   (when (string-match "make"
                       (car compilation-arguments))
     (let ((compilation-file (nearest-compilation-file (expand-file-name default-directory)
@@ -55,15 +61,7 @@ until it finds a makefile. I use it like this:
 
 (defun compile-goto-error-and-close-compilation-window ()
   "Useful to close compilation windows, so you have only one
-window open at any time (I set `pop-up-windows' to nil). I use
-it like this:
-
-(eval-after-load \"compile\"
-                 '(define-key
-                    compilation-mode-map
-                    [remap compile-goto-error]
-                    'compile-goto-error-and-close-compilation-window))
-"
+window open at any time (I set `pop-up-windows' to nil)."
   (interactive)
   (compile-goto-error)
   (delete-windows-on "*compilation*"))
