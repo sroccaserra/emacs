@@ -212,7 +212,15 @@
     (assert-error "argument" (destructuring-bind (a [b]) (1 [2]))))
 
 (defun destructest (a (b c))
-  (values a b c))
+  (vector a b c))
 
 (deftest "defun can't destructure"
-  (assert-error "function" (destructest '(1 (2 3)))))
+  (assert-error "invalid function"
+                (destructest 1 '(2 3))))
+
+(defun* destructest* (a (b c))
+  (vector a b c))
+
+(deftest "defun* can destructure"
+  (assert-equal [1 2 3]
+                (destructest* 1 '(2 3))))
