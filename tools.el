@@ -47,6 +47,14 @@
 (defun string-not-empty-p (str)
   (not (string-empty-p str)))
 
+(defun string-blank-p (str)
+  (if (string-empty-p str)
+      t
+    (not (null (string-match "^\\(?:\s*\n\\)*$" str)))))
+
+(defun string-not-blank-p (str)
+  (not (string-blank-p str)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Undestructive alist functions
 

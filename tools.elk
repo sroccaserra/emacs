@@ -168,18 +168,31 @@
 
 (deftest "an empty string is empty, a non empty string is not empty"
   (assert-nil (string-empty-p "hello"))
+  (assert-nil (string-empty-p " "))
   (assert-t (string-empty-p (copy-seq "")))
   (assert-t (string-empty-p nil))
   (assert-error "string" (string-empty-p 1)))
 
 (deftest "I can tell if a sring is blank"
   (assert-t (string-not-empty-p "hello"))
-  (assert-nil (string-not-empty-p nil))
   (assert-nil (string-not-empty-p ""))
+  (assert-nil (string-not-empty-p nil))
   (assert-error "string" (string-not-empty-p 1)))
 
 (deftest "symbols are non empty"
   (assert-nil (string-empty-p 'hello)))
+
+(deftest "an empty string or a string containing only whitespaces is blank"
+  (assert-t (string-blank-p ""))
+  (assert-t (string-blank-p nil))
+  (assert-t (string-blank-p " \t\n")))
+
+(deftest "a string containing non whitespace chars is not blank"
+  (assert-t (string-not-blank-p "h"))
+  (assert-t (string-not-blank-p "hello"))
+  (assert-t (string-not-blank-p " hello"))
+  (assert-t (string-not-blank-p "hello "))
+  (assert-t (string-not-blank-p " hello ")))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Destructuring bind
@@ -224,3 +237,4 @@
 (deftest "defun* can destructure"
   (assert-equal [1 2 3]
                 (destructest* 1 '(2 3))))
+
