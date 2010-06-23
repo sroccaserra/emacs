@@ -18,7 +18,9 @@
 (defun smart-compile ()
   "Saves current buffer, and depending on context:
 
-- in an elisp file, runs elk tests and returns.
+- in an Elisp file, runs elk tests.
+
+- in a Clojure file, runs clojure-test-run-tests.
 
 - if the compile command contains \"make\", and a makefile is
   found in the current directory or upward, runs the compile
@@ -28,16 +30,24 @@
   compiles."
   (interactive)
   (save-buffer)
-  (if eldoc-mode
-      (progn (eval-buffer)
-             (when (fboundp 'elk-test-run-all-buffers)
-               (elk-test-run-all-buffers t)))
-    (when (and (string-match  "make" compile-command)
-               (null (nearest-compilation-file default-directory
-                                               *default-compilation-file*)))
-      (message "No Makefile found, switching to rake")
-      (set (make-local-variable 'compile-command) "rake"))
-    (compile compile-command)))
+  (cond (eldoc-mode
+         (eval-buffer)
+         (when (fboundp 'elk-test-run-all-buffers)
+           (elk-test-run-all-buffers t)))
+        ((eq major-mode 'clojure-mode)
+         (unless (symbol-value 'clojure-test-mode)
+           (-?>> (buffer-file-name)
+                 (replace-regexp-in-string "\\.clj$" "_test.clj")
+                 (replace-regexp-in-string "/src/" "/test/")
+                 find-file))
+         (clojure-test-run-tests))
+        (t
+         (when (and (string-match  "make" compile-command)
+                    (null (nearest-compilation-file default-directory
+                                                    *default-compilation-file*)))
+           (message "No Makefile found, switching to rake")
+           (set (make-local-variable 'compile-command) "rake"))
+         (compile compile-command))))
 
 (defun nearest-compilation-file (dir compilation-file)
   "Search for the compilation file traversing up the directory tree."
