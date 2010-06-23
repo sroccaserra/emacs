@@ -35,12 +35,17 @@
          (when (fboundp 'elk-test-run-all-buffers)
            (elk-test-run-all-buffers t)))
         ((eq major-mode 'clojure-mode)
-         (unless (symbol-value 'clojure-test-mode)
-           (-?>> (buffer-file-name)
-                 (replace-regexp-in-string "\\.clj$" "_test.clj")
-                 (replace-regexp-in-string "/src/" "/test/")
-                 find-file))
-         (clojure-test-run-tests))
+         (let ((must-start-swank (not (get-buffer "*compilation*")))
+               (must-connect-to-slime (not (slime-connected-p))))
+           (cond (must-start-swank (compile compile-command))
+                 (must-connect-to-slime (slime-connect "127.0.0.1" 4005))
+                 (t
+                  (unless (symbol-value 'clojure-test-mode)
+                    (-?>> (buffer-file-name)
+                          (replace-regexp-in-string "\\.clj$" "_test.clj")
+                          (replace-regexp-in-string "/src/" "/test/")
+                          find-file))
+                  (clojure-test-run-tests)))))
         (t
          (when (and (string-match  "make" compile-command)
                     (null (nearest-compilation-file default-directory
