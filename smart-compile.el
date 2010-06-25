@@ -6,10 +6,10 @@
  "I use it like this"
  (global-set-key [(f9)] 'smart-compile)
 
- (eval-after-load \"compile\"
+ (eval-after-load "compile"
    '(setq compilation-process-setup-function 'reach-compilation-file))
 
- (eval-after-load \"compile\"
+ (eval-after-load "compile"
    '(define-key
      compilation-mode-map
      [remap compile-goto-error]
