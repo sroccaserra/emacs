@@ -7,9 +7,6 @@
  (global-set-key [(f9)] 'smart-compile)
 
  (eval-after-load "compile"
-   '(setq compilation-process-setup-function 'reach-compilation-file))
-
- (eval-after-load "compile"
    '(define-key
      compilation-mode-map
      [remap compile-goto-error]
@@ -47,35 +44,25 @@
                               find-file))
                       (clojure-test-run-tests)))))
            (make-or-rake ()
-             (when (and (string-match  "make" compile-command)
-                        (null (nearest-compilation-file default-directory
-                                                        *default-compilation-file*)))
-               (message "No Makefile found, switching to rake")
-               (set (make-local-variable 'compile-command) "rake"))
-             (compile compile-command)))
+             (let ((compilation-file (nearest-compilation-file default-directory)))
+               (when (and (not (string-match  "rake" compile-command))
+                          (null compilation-file))
+                 (message "No Makefile found, switching to rake")
+                 (set (make-local-variable 'compile-command) "rake"))
+               (let ((default-directory (file-name-directory compilation-file)))
+                 (compile compile-command)))))
     (cond (eldoc-mode (run-elisp-tests))
           ((eq major-mode 'clojure-mode) (run-clojure-tests))
           (t (make-or-rake)))))
 
-(defun nearest-compilation-file (dir compilation-file)
+(defun nearest-compilation-file (dir)
   "Search for the compilation file traversing up the directory tree."
-  (let ((file-path (concat dir compilation-file))
+  (let ((file-path (concat dir *default-compilation-file*))
         (parent (file-name-directory (directory-file-name dir))))
     (cond
       ((file-exists-p file-path) file-path)
       ((string= dir parent) nil)
-      (t (nearest-compilation-file parent compilation-file)))))
-
-(defun reach-compilation-file ()
-  "If your compile command containts 'make', goes up in the path
-until it finds a makefile."
-  (when (string-match "make"
-                      (car compilation-arguments))
-    (let ((compilation-file (nearest-compilation-file (expand-file-name default-directory)
-                                                      *default-compilation-file*)))
-      (when (null compilation-file)
-        (error "No file named '%s' found" *default-compilation-file*))
-      (setq default-directory (file-name-directory compilation-file)))))
+      (t (nearest-compilation-file parent)))))
 
 (defun compile-goto-error-and-close-compilation-window ()
   "Useful to close compilation windows, so you have only one
