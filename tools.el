@@ -74,6 +74,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Clojure's Trush operators
 
+
+;; (defun -> (&rest args)
+;;   (reduce (lambda (x y) (y x))
+;;           (sequence args)))
+
 (defmacro -> (x &optional form &rest more)
   (cond ((not (null more))
          `(-> (-> ,x ,form) ,@more))

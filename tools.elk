@@ -29,6 +29,8 @@
   (assert-equal "ABC"
                 (random-elt ["ABC"])))
 
+(deftest "reducing with a lambda"
+  (assert-equal 5 (reduce (lambda (x y) (+ x y)) [2 3])))
 ;;;;;;;;;;;;;
 ;; Functional
 
@@ -82,6 +84,9 @@
 (deftest "threading three forms"
   (assert-equal '(* 6 (+ 4 5 (- 2 3 x)))
                 (macroexpand-all '(->> x (- 2 3) (+ 4 5) (* 6)))))
+
+;; (deftest "trush with a lambda"
+;;   (assert-equal 10 (-> 5 (lambda (x) x + x))))
 
 (deftest "nil safe trush tests"
   (assert-equal 5.0
