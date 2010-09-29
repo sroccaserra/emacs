@@ -49,7 +49,9 @@
                           (null compilation-file))
                  (message "No Makefile found, switching to rake")
                  (set (make-local-variable 'compile-command) "rake"))
-               (let ((default-directory (file-name-directory compilation-file)))
+               (let ((default-directory (if compilation-file
+                                            (file-name-directory compilation-file)
+                                          default-directory)))
                  (compile compile-command)))))
     (cond (eldoc-mode (run-elisp-tests))
           ((eq major-mode 'clojure-mode) (run-clojure-tests))
