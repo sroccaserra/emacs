@@ -38,7 +38,11 @@
                             (replace-regexp-in-string "\\.clj$" "_test.clj")
                             (replace-regexp-in-string "/src/" "/test/")
                             find-file))
-                    (clojure-test-run-tests))
+                    (save-window-excursion
+                      (with-current-buffer "*slime-repl clojure*"
+                        (slime-repl-clear-buffer)))
+                    (clojure-test-run-tests)
+                    (slime-switch-to-output-buffer))
                    (t (when (y-or-n-p "Slime is not connected, open a terminal?")
                         (shell-command "cygterm&")))))
            (make-or-rake ()
