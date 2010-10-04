@@ -33,15 +33,16 @@
                (elk-test-run-all-buffers t)))
            (run-clojure-tests ()
              (cond ((slime-connected-p)
-                    (unless (symbol-value 'clojure-test-mode)
-                      (-?>> (buffer-file-name)
-                            (replace-regexp-in-string "\\.clj$" "_test.clj")
-                            (replace-regexp-in-string "/src/" "/test/")
-                            find-file))
                     (save-window-excursion
-                      (with-current-buffer "*slime-repl clojure*"
-                        (slime-repl-clear-buffer)))
-                    (clojure-test-run-tests)
+                      (unless (symbol-value 'clojure-test-mode)
+                        (-?>> (buffer-file-name)
+                              (replace-regexp-in-string "\\.clj$" "_test.clj")
+                              (replace-regexp-in-string "/src/" "/test/")
+                              find-file))
+                      (save-window-excursion
+                        (with-current-buffer "*slime-repl clojure*"
+                          (slime-repl-clear-buffer)))
+                      (clojure-test-run-tests))
                     (slime-switch-to-output-buffer))
                    (t (when (y-or-n-p "Slime is not connected, open a terminal?")
                         (shell-command "cygterm&")))))
