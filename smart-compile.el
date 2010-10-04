@@ -40,7 +40,7 @@
                             find-file))
                     (clojure-test-run-tests))
                    (t (when (y-or-n-p "Slime is not connected, open a terminal?")
-                        (shell-command "cygterm")))))
+                        (shell-command "cygterm&")))))
            (make-or-rake ()
              (let ((compilation-file (nearest-compilation-file default-directory)))
                (when (and (not (string-match  "rake" compile-command))
