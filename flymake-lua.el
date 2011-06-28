@@ -31,6 +31,7 @@
 (defvar flymake-lua-err-line-patterns '(("^.*luac[0-9.]*\\(.exe\\)?: *\\(.*\\):\\([0-9]+\\): \\(.*\\)$"
                                     2 3 nil 4)))
 
+;;;###autoload
 (defun flymake-lua-load ()
   (interactive)
   (when (and (not (null buffer-file-name)) (file-writable-p buffer-file-name))
