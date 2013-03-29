@@ -1,4 +1,4 @@
-;;; flymake-lua.el -- Flymake for Lua
+;;; flymake-lua.el --- Flymake for Lua
 ;;
 ;; Usage:
 ;;   (require 'flymake-lua)
