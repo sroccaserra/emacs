@@ -1,12 +1,11 @@
-;;
-;; Flymake for Lua
+;;; flymake-lua.el -- Flymake for Lua
 ;;
 ;; Usage:
 ;;   (require 'flymake-lua)
 ;;   (add-hook 'lua-mode-hook 'flymake-lua-load)
 ;;
-;; Note: litterally stolen from Steve Purcell's Flymake Ruby.
-;; See http://github.com/purcell/emacs.d/blob/master/site-lisp/flymake-ruby/flymake-ruby.el
+;; Note: literally stolen from Steve Purcell's Flymake Ruby.
+;; See http://github.com/purcell/flymake-ruby
 ;;
 
 (require 'flymake)
@@ -40,3 +39,4 @@
     (flymake-mode t)))
 
 (provide 'flymake-lua)
+;;; flymake-lua.el ends here
