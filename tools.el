@@ -2,6 +2,7 @@
 ;; Various tool functions & macros
 ;;
 
+(eval-when-compile (require 'cl))
 (require 'dash)
 
 (defmacro comment (&rest body)
