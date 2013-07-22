@@ -115,15 +115,15 @@
 ;;;;;;;;;;;;;;;;;;;;
 ;; Functional tools
 
-(defmacro partial (f &rest args)
-  `(lambda (&rest more)
-     (apply ',f ,@args more)))
+;; (defmacro partial (f &rest args)
+;;   `(lambda (&rest more)
+;;      (apply ',f ,@args more)))
 
 (defmacro lexdef (name args &rest body)
   "Defun with lexically-scoped parameters. Could also be called lexical-defun."
   `(defun ,name ,args
      (lexical-let ,(->> args
-                        (remove-if (partial equal '&rest))
+                        (remove-if (-partial 'equal '&rest))
                         (mapcar (lambda (arg) (list arg arg))))
        ,@body)))
 
