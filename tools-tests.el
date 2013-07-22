@@ -1,5 +1,6 @@
 (require 'dash)
 (require 'tools)
+(require 'ert)
 
 ;;;;;;;;;;;;
 ;; Sequences
