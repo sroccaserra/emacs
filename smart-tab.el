@@ -1,5 +1,6 @@
 ;;;
 ;; Smart Tab
+;; Old version, please search for a newer version on GitHub.
 
 (defvar smart-tab-using-hippie-expand t
   "turn this on if you want to use hippie-expand completion.")
@@ -32,4 +33,3 @@
                    (region-end))
     (indent-for-tab-command)))
 
-(provide 'smart-tab)
