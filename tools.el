@@ -2,6 +2,8 @@
 ;; Various tool functions & macros
 ;;
 
+(require 'dash)
+
 (defmacro comment (&rest body)
   "Ignores body, yields nil"
   nil)
@@ -79,20 +81,20 @@
 ;;   (reduce (lambda (x y) (y x))
 ;;           (sequence args)))
 
-(defmacro -> (x &optional form &rest more)
-  (cond ((not (null more))
-         `(-> (-> ,x ,form) ,@more))
-        ((not (null form))
-         (if (sequencep form)
-             `(,(first form) ,x ,@(rest form))
-           (list form x)))
-        (t x)))
-
-(defmacro ->> (x form &rest more)
-  (cond ((not (null more)) `(->> (->> ,x ,form) ,@more))
-        (t (if (sequencep form)
-               `(,(first form) ,@(rest form) ,x)
-             (list form x)))))
+;; (defmacro -> (x &optional form &rest more)
+;;   (cond ((not (null more))
+;;          `(-> (-> ,x ,form) ,@more))
+;;         ((not (null form))
+;;          (if (sequencep form)
+;;              `(,(first form) ,x ,@(rest form))
+;;            (list form x)))
+;;         (t x)))
+;;
+;; (defmacro ->> (x form &rest more)
+;;   (cond ((not (null more)) `(->> (->> ,x ,form) ,@more))
+;;         (t (if (sequencep form)
+;;                `(,(first form) ,@(rest form) ,x)
+;;              (list form x)))))
 
 (defmacro -?> (x form &rest more)
   (cond ((not (null more)) `(-?> (-?> ,x ,form) ,@more))
