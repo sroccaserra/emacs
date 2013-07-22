@@ -1,15 +1,6 @@
 Small & useful Emacs functions.
 
 
-Smart Tab
----------
-
-I like to have word completion near the homeline, and TAB feels natural to me.
-But I like to have automatic indentation bound to TAB as well. Fortunately,
-most of the time it is easy to decide which one I need. Smart Tab does that for
-me.
-
-
 Smart Compile
 -------------
 
@@ -29,3 +20,15 @@ Jekyll
 ------
 
 I use this to quickly create new posts, automatically using the current date.
+
+
+Smart Tab
+---------
+
+Note : this is the first and outdated version. Please have a look
+[here](https://github.com/genehack/smart-tab) instead.
+
+I like to have word completion near the homeline, and TAB feels natural to me.
+But I like to have automatic indentation bound to TAB as well. Fortunately,
+most of the time it is easy to decide which one I need. Smart Tab does that for
+me.
