@@ -1,12 +1,27 @@
 ;;; flymake-lua.el --- Flymake for Lua
-;;
+
+;; Copyright (C) 2009-2014 Sébastien Roccaserra
+     
+;; Author: Sébastien Roccaserra (format "<%s%s@%s.%s>" "s" "roccaserra" "yahoo" "com")
+;; Created: 07 Dec 2009
+;; Keywords: lua
+
+;; This file is not part of GNU Emacs.
+
+;; This file is free software...
+;; ...
+;; along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
 ;; Usage:
 ;;   (require 'flymake-lua)
 ;;   (add-hook 'lua-mode-hook 'flymake-lua-load)
 ;;
 ;; Note: literally stolen from Steve Purcell's Flymake Ruby.
 ;; See http://github.com/purcell/flymake-ruby
-;;
+
+;;; Code:
 
 (require 'flymake)
 
